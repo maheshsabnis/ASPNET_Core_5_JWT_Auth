@@ -1,0 +1,59 @@
+﻿@page "/products"
+@using SharedModels.Models
+@inject HttpClient httpClient
+@inject Blazored.SessionStorage.ISessionStorageService sessionStorage
+<h3>Products List Component</h3>
+<div class="container">
+     <div class="container">
+          <strong>@message</strong>
+      </div>
+    @if (products.Count == 0 || products == null)
+    { 
+      <div class="container">
+          <strong>No Data is Received</strong>
+      </div>
+    }
+    else
+    {
+        <table class="table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>Product Id</th>
+                    <th>Product Name</th>
+                    <th>Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach(var prd in products)
+                {
+                    <tr>
+                        <td>@prd.ProductId</td>
+                        <td>@prd.ProductName</td>
+                        <td>@prd.Price</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+@code {
+    List<Product> products;
+    string message;
+    protected override async Task OnInitializedAsync()
+    {
+        products = new List<Product>();
+        // check if the token is available then request the API for Access the data
+        string token = await sessionStorage.GetItemAsStringAsync("token");
+        if (String.IsNullOrEmpty(token))
+        {
+            message = "The Authentication is not done, please login";
+        }
+        else
+        {
+            httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+            products = await httpClient.GetFromJsonAsync<List<Product>>("http://localhost:60626/api/Product");  
+
+        } 
+    }
+}

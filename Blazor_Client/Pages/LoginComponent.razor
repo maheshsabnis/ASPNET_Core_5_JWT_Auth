@@ -1,0 +1,57 @@
+﻿@page "/login"
+@using SharedModels.Models
+@using System.Text.Json 
+@inject HttpClient httpClient
+@inject Blazored.SessionStorage.ISessionStorageService sessionStorage
+
+
+<h3>Login Component</h3>
+<div class="container">
+    <EditForm Model="@user">
+         <DataAnnotationsValidator>
+           
+         </DataAnnotationsValidator>
+           <ValidationSummary></ValidationSummary>
+        <div class="form-group">
+             <label>User Name</label>
+             <InputText  class="form-control" @bind-Value="@user.UserName"></InputText>
+        </div>
+         <div class="form-group">
+             <label>Password</label>
+             <InputText type="password" class="form-control" @bind-Value="@user.Password"></InputText>
+        </div>
+        
+         <div class="form-group">
+             <button class="btn btn-primary" @onclick="@clear">Clear</button>
+             <button class="btn btn-success" @onclick="@login">Login</button>
+        </div>
+        <hr/> 
+        <div class="container">
+            <strong>@responseData.Message</strong>
+        </div>
+    </EditForm>
+</div>   
+@code {
+    private LoginUser user;
+    private ResponseData responseData;
+
+    protected override Task OnInitializedAsync()
+    {
+        user = new LoginUser();
+        responseData = new ResponseData();
+        return base.OnInitializedAsync();
+    }
+    void clear()
+    {
+        user = new LoginUser(); 
+    }
+
+    async Task login()
+    {
+        var response = await httpClient.PostAsJsonAsync("http://localhost:60626/api/Auth/Login", user);
+        var message = await response.Content.ReadAsStringAsync();
+        responseData = JsonSerializer.Deserialize<ResponseData>(message);
+        //save data in sesion storage
+        await sessionStorage.SetItemAsStringAsync("token", responseData.Message);
+    }
+}
